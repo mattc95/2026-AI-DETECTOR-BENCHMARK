@@ -18,6 +18,8 @@ All detector runs in this repository were completed on May 14, 2026. The reposit
 
 ## Key Result
 
+![Overall AI detector benchmark performance](img/overall_performance.png)
+
 GPTZero achieved the highest overall accuracy in this run, while GPTHumanizer had the lowest human false positive risk.
 
 | Detector | Total Items | Evaluable Items | Overall Accuracy | AI Detection Rate | Human False Positive Rate | AI Miss Rate | TP | FP | FN | TN |
@@ -80,6 +82,8 @@ Why this matters:
 - The human data is not drawn from a single writing style or domain.
 - The sources include encyclopedic, web, legal, technical, biomedical, email, forum, patent, academic, and subtitle-style text.
 - Every final human benchmark record has a `human` label, non-empty text, a source field, and a retained per-item record in the detector outputs.
+
+![Human data credibility and detector performance](img/human_performance.png)
 
 ### AI Data Credibility
 
