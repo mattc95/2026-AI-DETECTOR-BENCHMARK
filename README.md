@@ -199,7 +199,7 @@ GPTZero has 298 evaluable records in the 500-1000 word bucket because two record
 
 3. ZeroGPT and Sapling showed high human false positive risk.
 
-   ZeroGPT flagged 92 of 500 human texts as AI. Sapling flagged 97 of 500 human texts as AI under the benchmark threshold of score > 50%.
+   ZeroGPT flagged 92 of 500 human texts as AI. Sapling flagged 97 of 500 human texts as AI using the benchmark rule of score > 50%.
 
 4. Short text is the most difficult bucket.
 
@@ -231,6 +231,7 @@ python -m pip install -r requirements.txt
 Run the GPTHumanizer evaluation:
 
 ```bash
+export GPTHUMANIZER_API_KEY="your_key_here"
 python evaluate_detection_datasets.py --restart
 ```
 
@@ -259,12 +260,6 @@ On Windows PowerShell, set environment variables with `$env:NAME = "value"` befo
 
 The scripts also support explicit headers or API keys through command-line options. Do not commit private API keys to the repository.
 
-Optional Sapling threshold analysis:
-
-```bash
-python analyze_sapling_thresholds.py --threshold 80 --threshold 90 -o output/sapling_threshold_analysis_80_90.json
-```
-
 ## Auditability
 
 This repository is intended to make the benchmark auditable rather than aggregate-only.
@@ -278,7 +273,6 @@ Evidence available in this repository and the linked public artifacts:
 - Evaluation scripts for all four detectors.
 - Public Google Drive links to the complete per-item classifier outputs for all four detectors.
 - Aggregate metrics embedded in each linked output file.
-- Sapling threshold analysis files for alternative score thresholds.
 
 This means the headline results can be checked against the item-level classifications by downloading the linked output artifacts instead of relying only on summary tables.
 

@@ -20,7 +20,7 @@ DEFAULT_DATASETS = (
     ("human_detection_test", Path("data/human_detection_test.json")),
     ("ai_detection_test", Path("data/ai_detection_test.json")),
 )
-DEFAULT_SCORE_THRESHOLD = 50.0
+SAPLING_AI_SCORE_CUTOFF = 50.0
 TOKEN_FIELDS = {"token_probs", "tokens"}
 
 
@@ -161,10 +161,10 @@ def normalize_percent(value: Any) -> float | None:
     return number
 
 
-def score_to_label(score_percent: float | None, threshold: float = DEFAULT_SCORE_THRESHOLD) -> str | None:
+def score_to_label(score_percent: float | None) -> str | None:
     if score_percent is None:
         return None
-    if score_percent > threshold:
+    if score_percent > SAPLING_AI_SCORE_CUTOFF:
         return "ai"
     return "human"
 
@@ -309,7 +309,6 @@ def classify_text(
     timeout: float,
     retries: int,
     score_string: bool,
-    score_threshold: float,
     drop_token_fields: bool,
 ) -> SaplingResult:
     last_error = ""
@@ -335,7 +334,7 @@ def classify_text(
             response.raise_for_status()
 
             score, score_path, score_percent = extract_score(response_value)
-            predicted_label = score_to_label(score_percent, score_threshold)
+            predicted_label = score_to_label(score_percent)
             if not isinstance(response_value, dict):
                 return SaplingResult(
                     status="invalid_json",
@@ -381,7 +380,7 @@ def classify_text(
         score=score,
         score_path=score_path,
         score_percent=score_percent,
-        predicted_label=score_to_label(score_percent, score_threshold),
+        predicted_label=score_to_label(score_percent),
         response=last_response,
         error=last_error,
     )
@@ -543,7 +542,6 @@ def save_output(
     endpoint: str,
     dataset_specs: list[tuple[str, Path]],
     text_field: str,
-    score_threshold: float,
     score_string: bool,
     drop_token_fields: bool,
     items: dict[str, Any],
@@ -559,7 +557,7 @@ def save_output(
                 "score_string": score_string,
                 "drop_token_fields": drop_token_fields,
             },
-            "prediction_rule": f"Sapling score > {score_threshold}% => ai; score <= {score_threshold}% => human",
+            "prediction_rule": f"Sapling score > {SAPLING_AI_SCORE_CUTOFF:g}% => ai; score <= {SAPLING_AI_SCORE_CUTOFF:g}% => human",
             "include_response": True,
             "item_count": len(records),
         },
@@ -597,7 +595,6 @@ def parse_args() -> argparse.Namespace:
         help="Maximum request count started per second",
     )
     parser.add_argument("--save-every", type=positive_int, default=10, help="Save progress every N processed items")
-    parser.add_argument("--threshold", type=positive_float, default=DEFAULT_SCORE_THRESHOLD, help="AI threshold in percent")
     parser.add_argument("--score-string", action="store_true", help="Request Sapling score_string=true")
     parser.add_argument("--drop-token-fields", action="store_true", help="Do not save token_probs or tokens fields in responses")
     parser.add_argument("--header", action="append", default=[], help="Extra HTTP header, such as 'X-Name=value'")
@@ -639,7 +636,7 @@ def main() -> int:
     print(f"Input JSON field: {args.field}")
     print("Request field: text")
     print(f"Items to request: {len(jobs)}, resumed: {resumed_count}")
-    print(f"Rule: Sapling score > {args.threshold}% => ai; score <= {args.threshold}% => human")
+    print(f"Rule: Sapling score > {SAPLING_AI_SCORE_CUTOFF:g}% => ai; score <= {SAPLING_AI_SCORE_CUTOFF:g}% => human")
 
     processed_count = 0
     saved_count = 0
@@ -661,7 +658,6 @@ def main() -> int:
                         args.timeout,
                         args.retries,
                         args.score_string,
-                        args.threshold,
                         args.drop_token_fields,
                     ): job
                     for job in batch
@@ -681,7 +677,6 @@ def main() -> int:
                     endpoint,
                     dataset_specs,
                     args.field,
-                    args.threshold,
                     args.score_string,
                     args.drop_token_fields,
                     output_items,
@@ -705,7 +700,6 @@ def main() -> int:
             endpoint,
             dataset_specs,
             args.field,
-            args.threshold,
             args.score_string,
             args.drop_token_fields,
             output_items,
@@ -718,7 +712,6 @@ def main() -> int:
         endpoint,
         dataset_specs,
         args.field,
-        args.threshold,
         args.score_string,
         args.drop_token_fields,
         output_items,
